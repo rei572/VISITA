@@ -1,0 +1,456 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Fotos da Visita</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#17202a">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: ferramenta de campo, uma coluna, grade de quadros de foto 2 por linha */
+:root{
+  --bg:#eef1f4; --surface:#ffffff; --fg:#17202a; --muted:#5b6876; --line:#d3dae1;
+  --accent:#e0a100; --accent-ink:#1a1400;
+  --ok:#1e8a4c; --ok-bg:#e3f4ea; --miss:#c8312b; --miss-bg:#fbeceb;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#11161c; --surface:#1a2129; --fg:#e8edf2; --muted:#93a0ad; --line:#2c3642;
+  --accent:#f2b628; --accent-ink:#1a1400;
+  --ok:#4cc27e; --ok-bg:#16301f; --miss:#ff6b63; --miss-bg:#3a1a19; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11161c; --surface:#1a2129; --fg:#e8edf2; --muted:#93a0ad; --line:#2c3642;
+  --accent:#f2b628; --accent-ink:#1a1400;
+  --ok:#4cc27e; --ok-bg:#16301f; --miss:#ff6b63; --miss-bg:#3a1a19; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{overflow-x:hidden;max-width:100%;overscroll-behavior-x:none}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.4;margin:0;touch-action:pan-y;-webkit-text-size-adjust:100%}
+.wrap{max-width:640px;margin:0 auto;padding-block:16px 40px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:18px}
+header h1{font-family:var(--display);font-weight:700;font-size:2rem;letter-spacing:.02em;margin:0;text-transform:uppercase;line-height:1}
+header p{margin:4px 0 0;color:var(--muted);font-size:.95rem}
+.tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:5px}
+.tabs button{font-family:var(--display);font-weight:700;font-size:1.3rem;letter-spacing:.04em;border:0;border-radius:8px;padding:10px;background:transparent;color:var(--muted);cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.tabs small{display:block;font-family:var(--body);font-weight:500;font-size:.75rem;letter-spacing:0}
+.status{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;font-weight:600}
+.status.pending{background:var(--miss-bg);color:var(--miss)}
+.status.done{background:var(--ok-bg);color:var(--ok)}
+.status .count{font-family:var(--display);font-size:1.8rem;line-height:1;font-variant-numeric:tabular-nums}
+.bar{flex:1;height:8px;border-radius:4px;background:color-mix(in srgb,currentColor 20%,transparent);overflow:hidden}
+.bar i{display:block;height:100%;background:currentColor;transition:width .25s}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fields label{display:flex;flex-direction:column;gap:4px;font-size:.8rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;min-width:0}
+.fields input,.fields textarea{font:inherit;font-size:1rem;text-transform:none;letter-spacing:0;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px;width:100%}
+.sec{font-family:var(--display);font-weight:700;font-size:1.4rem;letter-spacing:.03em;text-transform:uppercase;margin:6px 0 0}
+.fields textarea{font:inherit;font-size:1rem;text-transform:none;letter-spacing:0;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px;width:100%;resize:vertical}
+.metr{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.metr3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (max-width:420px){.metr3{grid-template-columns:1fr}}
+.ocr{display:flex;flex-direction:column;gap:6px}
+.ocr .btn{padding:11px;font-size:.92rem}
+#ocr-status{font-size:.85rem;color:var(--muted);min-height:1em}
+#ocr-status.ok{color:var(--ok);font-weight:600}
+#ocr-status.err{color:var(--miss);font-weight:600}
+.viab{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.viab span{font-size:.8rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;flex-basis:100%}
+.vb{flex:1;font:inherit;font-weight:700;font-size:1rem;padding:12px;border-radius:10px;border:2px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+.vb.sim[aria-pressed="true"]{border-color:var(--ok);background:var(--ok-bg);color:var(--ok)}
+.vb.nao[aria-pressed="true"]{border-color:var(--miss);background:var(--miss-bg);color:var(--miss)}
+.preview{white-space:pre-wrap;word-break:break-word;font-family:var(--body);font-size:.92rem;background:var(--surface);border:1px dashed var(--line);border-radius:10px;padding:12px;margin:0;color:var(--fg)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.slot{position:relative;display:flex;flex-direction:column;background:var(--surface);border-radius:12px;overflow:hidden;border:2px dashed var(--miss)}
+.slot.filled{border:2px solid var(--ok)}
+.pic{aspect-ratio:4/3;max-width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:var(--miss-bg);color:var(--miss);border:0;width:100%;font:inherit;padding:0}
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0 0 0 0)}
+.pic:focus-within{outline:3px solid var(--accent);outline-offset:-3px}
+.fontes{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line);margin-top:auto}
+.fonte{position:relative;display:flex;align-items:center;justify-content:center;padding:11px 4px;font-weight:600;font-size:.88rem;cursor:pointer;color:var(--fg)}
+.fonte+.fonte{border-left:1px solid var(--line)}
+.fonte:active{background:var(--bg)}
+.fonte:focus-within{outline:3px solid var(--accent);outline-offset:-3px}
+.pic img{width:100%;height:100%;object-fit:cover;display:block}
+.pic .plus{font-family:var(--display);font-size:2.2rem;line-height:1}
+.pic .tag{font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.slot.filled .pic{background:var(--bg)}
+.cap{padding:8px 10px;display:flex;gap:8px;align-items:flex-start}
+.num{font-family:var(--display);font-weight:700;font-size:1.1rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.cap b{text-transform:uppercase;font-weight:600;font-size:.92rem;line-height:1.25;min-width:0}
+.del{position:absolute;top:6px;right:6px;width:32px;height:32px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;font-size:1rem;cursor:pointer}
+.ok-badge{position:absolute;top:6px;left:6px;background:var(--ok);color:#fff;border-radius:6px;padding:2px 7px;font-size:.72rem;font-weight:700;letter-spacing:.06em}
+.actions{display:flex;flex-direction:column;gap:10px}
+.btn{font:inherit;font-weight:600;font-size:1rem;padding:14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.danger{color:var(--miss)}
+.confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px;border-radius:10px;background:var(--miss-bg);color:var(--miss);font-weight:600}
+.confirm .btn{padding:10px 14px}
+.toast{text-align:center;color:var(--ok);font-weight:600;min-height:1.2em}
+.note{color:var(--muted);font-size:.85rem;margin:0}
+button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+@media (max-width:360px){.fields{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Fotos da visita</h1>
+    <p>Em cada quadro: Câmera para tirar na hora, Galeria para usar uma foto já salva (editada). Quadro vermelho = foto que falta.</p>
+  </header>
+
+  <div class="tabs" role="group" aria-label="Tipo de visita">
+    <button id="tab-bt" data-tipo="bt">B.T<small>Baixa tensão</small></button>
+    <button id="tab-mt" data-tipo="mt">M.T<small>Média tensão</small></button>
+    <button id="tab-em" data-tipo="em">EMERG.<small>B.T emergencial</small></button>
+  </div>
+
+  <div id="status" class="status pending">
+    <span class="count" id="count">0/0</span>
+    <span class="bar"><i id="barfill" style="width:0"></i></span>
+    <span id="statusText">Faltam fotos</span>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <h2 class="sec">Relatório da visita</h2>
+  <div class="fields">
+    <label style="grid-column:1/-1">📍 Endereço<input id="f-end" type="text" placeholder="Ex.: R. Jerônimo Dias Ribeiro, 308 – Jardim São Paulo"></label>
+    <div class="ocr" style="grid-column:1/-1">
+      <button type="button" class="btn" id="ler-end">🔎 Ler endereço da folha da viabilidade</button>
+      <span id="ocr-status" aria-live="polite"></span>
+    </div>
+    <label style="grid-column:1/-1">🚪 Rua de entrada<input id="f-entr" type="text" placeholder="Ex.: R. Augusto Tolle, 120 (portão lateral)"></label>
+    <label style="grid-column:1/-1">↔️ Paralela à rua principal<input id="f-princ" type="text" placeholder="Ex.: Estrada do Campo Limpo"></label>
+    <div class="viab" id="box-desm" role="group" aria-label="Eletrocentro desmembrado" style="grid-column:1/-1" hidden>
+      <span>⚠️ Eletrocentro desmembrado?</span>
+      <button type="button" class="vb nao" id="d-sim" aria-pressed="false">⚠️ SIM</button>
+      <button type="button" class="vb sim" id="d-nao" aria-pressed="false">NÃO</button>
+    </div>
+    <label style="grid-column:1/-1">👤 Responsável local<input id="f-resp" type="text" placeholder="Nome do responsável"></label>
+    <label style="grid-column:1/-1">🤝 Viabilizador<input id="f-viab" type="text" placeholder="Nome do viabilizador"></label>
+    <div class="metr3" id="box-mat" style="grid-column:1/-1">
+      <label>🔩 Parafusos p/ emenda<input id="f-paraf" type="text" inputmode="numeric" placeholder="Qtd."></label>
+      <label>🔌 Cabos adicionais<input id="f-cabos" type="text" inputmode="numeric" placeholder="Qtd."></label>
+      <label>🧱 Passa-cabos<input id="f-passa" type="text" inputmode="numeric" placeholder="Qtd."></label>
+    </div>
+    <label style="grid-column:1/-1">ℹ️ Observações<textarea id="f-obs" rows="4" placeholder="Ex.: Padrão do cliente irregular"></textarea></label>
+    <div class="viab" role="group" aria-label="Viabilidade" style="grid-column:1/-1">
+      <span>Viabilidade</span>
+      <button type="button" class="vb sim" id="v-sim" aria-pressed="false">✅ SIM</button>
+      <button type="button" class="vb nao" id="v-nao" aria-pressed="false">❌ NÃO</button>
+    </div>
+  </div>
+  <pre class="preview" id="preview"></pre>
+
+  <div class="actions">
+    <button class="btn primary" id="painel">Gerar painel com as fotos</button>
+    <button class="btn" id="copy">Enviar relatório no WhatsApp</button>
+    <div class="toast" id="toast" aria-live="polite"></div>
+    <textarea id="fallback" hidden readonly style="width:100%;min-height:160px;font:inherit;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg)"></textarea>
+    <button class="btn danger" id="reset">Nova visita (limpar tudo)</button>
+    <div class="confirm" id="confirm" hidden>
+      <span>Apagar todas as fotos desta visita?</span>
+      <button class="btn danger" id="yes">Sim, limpar</button>
+      <button class="btn" id="no">Cancelar</button>
+    </div>
+    <p class="note">As fotos ficam salvas só neste celular, até você tocar em "Nova visita". Para mandar no WhatsApp, use as fotos da sua galeria.</p>
+  </div>
+
+</div>
+
+<script>
+const LISTAS = {
+  bt: ["Folha da viabilidade","Local do quadro","Dentro do quadro","Tensão entre fases","Tensão fase-neutro","Corrente fase R","Corrente fase S","Corrente fase T","Identificação das fases R, S, T e neutro","Local de instalação do gerador","Número do local","Carro em frente ao local","APR (print)"],
+  mt: ["Folha da viabilidade","Ponto de conexão do gerador","Aterramento","Local do gerador","Inclinômetro","Número do local","Carro em frente ao local","APR","Medida do local do eletrocentro (m)"],
+  em: ["Local do quadro","Dentro do quadro","Tensão entre fases","Tensão fase-neutro","Corrente fase R","Corrente fase S","Corrente fase T","Medição em cima da NH","Medição embaixo da NH","Identificação das fases R, S, T e neutro (se possível)","Local de instalação do gerador","Número do local","Carro em frente ao local","APR (print)"]
+};
+const NOMES = {bt:"B.T", mt:"M.T", em:"B.T EMERGENCIAL"};
+const CAMPOS = ["f-end","f-entr","f-princ","f-resp","f-viab","f-obs","f-paraf","f-cabos","f-passa"];
+let tipo = "bt";
+let fotos = {};        // chave "bt-0" -> dataURL
+let alvo = null;
+const $ = id => document.getElementById(id);
+
+/* ---------- armazenamento (IndexedDB, opcional) ---------- */
+let db = null;
+function abrirDB(){
+  return new Promise(res=>{
+    try{
+      const r = indexedDB.open("fotos-visita",1);
+      r.onupgradeneeded = ()=> r.result.createObjectStore("kv");
+      r.onsuccess = ()=>{ db=r.result; res(); };
+      r.onerror = ()=> res();
+    }catch(e){ res(); }
+  });
+}
+function salvar(k,v){ try{ if(!db) return; const t=db.transaction("kv","readwrite").objectStore("kv"); v==null?t.delete(k):t.put(v,k);}catch(e){} }
+function carregarTudo(){
+  return new Promise(res=>{
+    try{
+      if(!db) return res();
+      const st=db.transaction("kv").objectStore("kv"); const req=st.openCursor();
+      req.onsuccess=()=>{ const c=req.result; if(c){ if(c.key.startsWith("foto:")) fotos[c.key.slice(5)]=c.value; else if(c.key==="tipo") tipo=c.value; else if(c.key==="viab") viab=c.value||""; else if(c.key==="desm") desm=c.value||""; else if(c.key.startsWith("campo:")){const el=$(c.key.slice(6)); if(el) el.value=c.value;} c.continue(); } else res(); };
+      req.onerror=()=>res();
+    }catch(e){ res(); }
+  });
+}
+
+/* ---------- reduzir foto para não pesar ---------- */
+function reduzir(file){
+  return new Promise((res,rej)=>{
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = ()=>{
+      const max=4096, s=Math.min(1,max/Math.max(img.width,img.height));
+      const c=document.createElement("canvas"); c.width=Math.round(img.width*s); c.height=Math.round(img.height*s);
+      c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+      URL.revokeObjectURL(url); res(c.toDataURL("image/jpeg",.95));
+    };
+    img.onerror = ()=>{ URL.revokeObjectURL(url); rej(); };
+    img.src = url;
+  });
+}
+
+/* ---------- tela ---------- */
+function render(){
+  $("tab-bt").setAttribute("aria-pressed", tipo==="bt");
+  $("tab-mt").setAttribute("aria-pressed", tipo==="mt");
+  $("tab-em").setAttribute("aria-pressed", tipo==="em");
+  $("box-desm").hidden = tipo!=="mt";
+  $("box-mat").hidden = !(tipo==="bt"||tipo==="em");
+  $("d-sim").setAttribute("aria-pressed",desm==="sim"); $("d-nao").setAttribute("aria-pressed",desm==="nao");
+  const lista = LISTAS[tipo], grid=$("grid"); grid.innerHTML="";
+  let feitas=0;
+  lista.forEach((nome,i)=>{
+    const k=tipo+"-"+i, f=fotos[k]; if(f) feitas++;
+    const slot=document.createElement("div"); slot.className="slot"+(f?" filled":"");
+    const pic=document.createElement("div"); pic.className="pic";
+    if(f){ const im=document.createElement("img"); im.src=f; im.alt=nome; pic.appendChild(im); }
+    else pic.innerHTML='<span class="plus">+</span><span class="tag">Falta foto</span>';
+    slot.appendChild(pic);
+    const fontes=document.createElement("div"); fontes.className="fontes";
+    [["cam","📷 Câmera",true],["gal","🖼 Galeria",false]].forEach(([id,txt,cam])=>{
+      const lb=document.createElement("label"); lb.className="fonte"; lb.textContent=txt;
+      const inp=document.createElement("input"); inp.type="file"; inp.accept="image/*"; inp.className="vh";
+      if(cam) inp.setAttribute("capture","environment");
+      inp.id=id+"-"+k; inp.setAttribute("aria-label",txt.slice(2)+": "+nome);
+      inp.addEventListener("change",()=>{ alvo=k; receber(inp.files&&inp.files[0]); });
+      lb.appendChild(inp); fontes.appendChild(lb);
+    });
+    if(f){
+      const ok=document.createElement("span"); ok.className="ok-badge"; ok.textContent="OK"; slot.appendChild(ok);
+      const d=document.createElement("button"); d.className="del"; d.type="button"; d.textContent="✕"; d.setAttribute("aria-label","Remover foto: "+nome);
+      d.onclick=()=>{ delete fotos[k]; salvar("foto:"+k,null); render(); }; slot.appendChild(d);
+    }
+    const cap=document.createElement("div"); cap.className="cap";
+    cap.innerHTML='<span class="num">'+String(i+1).padStart(2,"0")+'</span><b></b>'; cap.querySelector("b").textContent=nome;
+    slot.appendChild(cap); slot.appendChild(fontes); grid.appendChild(slot);
+  });
+  const total=lista.length, st=$("status");
+  $("count").textContent=feitas+"/"+total;
+  $("barfill").style.width=(feitas/total*100)+"%";
+  const falta=total-feitas;
+  st.className="status "+(falta?"pending":"done");
+  $("v-sim").setAttribute("aria-pressed",viab==="sim"); $("v-nao").setAttribute("aria-pressed",viab==="nao"); atualizarPreview();
+  $("statusText").textContent = falta ? (falta===1?"Falta 1 foto":"Faltam "+falta+" fotos") : "Todas as fotos OK";
+}
+
+async function receber(file){
+  if(!file||!alvo) return;
+  try{
+    const d=await reduzir(file); fotos[alvo]=d; salvar("foto:"+alvo,d); render();
+    const [tp,ix]=alvo.split("-");
+    if(LISTAS[tp] && LISTAS[tp][+ix]==="Folha da viabilidade") lerEndereco(d);
+  }
+  catch(err){ toast("Não consegui abrir essa imagem. Tente outra foto.", true); }
+}
+
+/* ---------- ler endereço da folha (OCR) ---------- */
+let tessP=null;
+function carregarTess(){
+  if(window.Tesseract) return Promise.resolve();
+  if(tessP) return tessP;
+  tessP=new Promise((res,rej)=>{ const s=document.createElement("script");
+    s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js";
+    s.onload=()=>res(); s.onerror=()=>{ tessP=null; rej(); }; document.head.appendChild(s); });
+  return tessP;
+}
+function ocrStatus(msg,cls){ const e=$("ocr-status"); e.textContent=msg; e.className=cls||""; }
+function acharEndereco(txt){
+  const linhas=txt.split(/\n+/).map(l=>l.replace(/\s+/g," ").trim()).filter(l=>l.length>4);
+  const tipoRua=/\b(R\.|Rua|Av\.?|Avenida|Al\.|Alameda|Estr\.?|Estrada|Trav\.?|Travessa|Tv\.|Pça\.?|Praça|Rod\.?|Rodovia|Viela|Largo|Vila)\b/i;
+  for(const l of linhas){
+    const m=l.match(/endere[çc]o\s*[:\-]?\s*(.+)/i);
+    if(m && m[1].length>4) return m[1].trim();
+  }
+  const c=linhas.filter(l=>tipoRua.test(l));
+  const comNum=c.find(l=>/\d/.test(l));
+  return (comNum||c[0]||"").replace(/^[^A-Za-zÀ-ÿ]+/,"");
+}
+async function lerEndereco(dataUrl){
+  if(!dataUrl){ ocrStatus("Tire primeiro a foto da folha da viabilidade.","err"); return; }
+  $("ler-end").disabled=true;
+  ocrStatus("Lendo o endereço da folha… (pode levar uns segundos)");
+  try{
+    await carregarTess();
+    const im=await carregarImg(dataUrl);
+    const s=Math.min(1,2000/Math.max(im.width,im.height));
+    const c=document.createElement("canvas"); c.width=Math.round(im.width*s); c.height=Math.round(im.height*s);
+    const x=c.getContext("2d"); x.filter="grayscale(1) contrast(1.4)"; x.drawImage(im,0,0,c.width,c.height);
+    const r=await Tesseract.recognize(c,"por");
+    const end=acharEndereco(r.data.text||"");
+    if(end){ $("f-end").value=end; salvar("campo:f-end",end); atualizarPreview(); ocrStatus("Endereço preenchido. Confira se está certo.","ok"); }
+    else ocrStatus("Não achei o endereço na foto. Tire de novo mais de perto ou digite.","err");
+  }catch(e){
+    ocrStatus("Não consegui ler agora. Precisa de internet na primeira vez. Digite o endereço.","err");
+  }finally{ $("ler-end").disabled=false; }
+}
+$("ler-end").onclick=()=>{ const i=(LISTAS[tipo]||[]).indexOf("Folha da viabilidade");
+  if(i<0){ ocrStatus("Esta visita não tem folha da viabilidade.","err"); return; }
+  lerEndereco(fotos[tipo+"-"+i]); };
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{ tipo=b.dataset.tipo; salvar("tipo",tipo); render(); });
+CAMPOS.forEach(id=>$(id).addEventListener("input",e=>{ salvar("campo:"+id,e.target.value); atualizarPreview(); }));
+let viab="";
+function setViab(v){ viab=v; $("v-sim").setAttribute("aria-pressed",v==="sim"); $("v-nao").setAttribute("aria-pressed",v==="nao"); salvar("viab",v); atualizarPreview(); }
+$("v-sim").onclick=()=>setViab(viab==="sim"?"":"sim");
+$("v-nao").onclick=()=>setViab(viab==="nao"?"":"nao");
+let desm="";
+function setDesm(v){ desm=v; $("d-sim").setAttribute("aria-pressed",v==="sim"); $("d-nao").setAttribute("aria-pressed",v==="nao"); salvar("desm",v); atualizarPreview(); }
+$("d-sim").onclick=()=>setDesm(desm==="sim"?"":"sim");
+$("d-nao").onclick=()=>setDesm(desm==="nao"?"":"nao");
+function atualizarPreview(){ $("preview").textContent=resumo(); }
+
+function resumo(){
+  const end=$("f-end").value.trim(), resp=$("f-resp").value.trim(), vz=$("f-viab").value.trim(), obs=$("f-obs").value.trim();
+  let t="⚡ VISITA TÉCNICA "+NOMES[tipo]+" ⚡\n━━━━━━━━━━━━\n";
+  const AL=(tipo==="mt" && desm==="sim");
+  if(AL) t="🚨🚨🚨🚨🚨🚨🚨🚨\n*⚠️ ATENÇÃO ⚠️*\n*ELETROCENTRO DESMEMBRADO*\n🚨🚨🚨🚨🚨🚨🚨🚨\n\n"+t;
+  if(end) t+="📍 Endereço: "+end+"\n";
+  const entr=$("f-entr").value.trim();
+  const princ=$("f-princ").value.trim();
+  if(entr) t+="🚪 Entrada: "+entr+(princ?" (paralela à "+princ+")":"")+"\n";
+  if(tipo==="mt" && desm==="nao") t+="🔌 Eletrocentro: não desmembrado\n";
+  if(resp) t+="👤 Responsável local: "+resp+"\n";
+  if(vz) t+="🤝 Viabilizador: "+vz+"\n";
+  if(tipo==="bt"||tipo==="em"){
+    const pa=$("f-paraf").value.trim(), ca=$("f-cabos").value.trim(), ps=$("f-passa").value.trim();
+    if(pa) t+="🔩 Parafusos p/ emenda: "+pa+"\n";
+    if(ca) t+="🔌 Cabos adicionais: "+ca+"\n";
+    if(ps) t+="🧱 Passa-cabos: "+ps+"\n";
+  }
+  if(obs) t+="ℹ️ "+obs+"\n";
+  t+="\n👷 Técnico: Reinaldo\n";
+  if(viab==="sim") t+="✅ VIABILIDADE: SIM";
+  else if(viab==="nao") t+="❌ VIABILIDADE: NÃO";
+  if(AL) t+="\n\n🚨 *ATENÇÃO: ELETROCENTRO DESMEMBRADO* 🚨";
+  return t;
+}
+function toast(msg,erro){ const t=$("toast"); t.style.color=erro?"var(--miss)":"var(--ok)"; t.textContent=msg; setTimeout(()=>{ if(t.textContent===msg) t.textContent=""; },3000); }
+$("copy").onclick=()=>{
+  const txt=resumo(), fb=$("fallback");
+  try{ navigator.clipboard.writeText(txt).catch(()=>{}); }catch(e){}
+  const a=document.createElement("a");
+  a.href="https://wa.me/?text="+encodeURIComponent(txt); a.target="_blank"; a.rel="noopener";
+  document.body.appendChild(a); a.click(); a.remove();
+  toast("Abrindo o WhatsApp. Escolha a conversa e toque em enviar.");
+};
+function copiarSoTexto(){
+  const txt=resumo(), fb=$("fallback");
+  try{
+    navigator.clipboard.writeText(txt).then(()=>{ fb.hidden=true; toast("Resumo copiado. É só colar no WhatsApp."); })
+      .catch(()=>{ fb.value=txt; fb.hidden=false; fb.select(); toast("Selecione o texto abaixo e copie."); });
+  }catch(e){ fb.value=txt; fb.hidden=false; fb.select(); toast("Selecione o texto abaixo e copie."); }
+};
+function paraArquivo(dataUrl,nome){
+  const [cab,b64]=dataUrl.split(","); const bin=atob(b64); const u=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i);
+  return new File([u], nome, {type:"image/jpeg"});
+}
+function carregarImg(src){ return new Promise(r=>{ const im=new Image(); im.onload=()=>r(im); im.onerror=()=>r(null); im.src=src; }); }
+function carimbo(){ const d=new Date(); return d.toLocaleDateString("pt-BR").replace(/\//g,"-")+" "+String(d.getHours()).padStart(2,"0")+"h"+String(d.getMinutes()).padStart(2,"0"); }
+function itensComFoto(){ const L=LISTAS[tipo], r=[]; L.forEach((n,i)=>{ const f=fotos[tipo+"-"+i]; if(f) r.push({n,i,f}); }); return r; }
+function paraBlob(c){ return new Promise(r=>c.toBlob(r,"image/jpeg",.95)); }
+async function enviarOuBaixar(arquivos,msgBaixado){
+  try{ await navigator.clipboard.writeText(resumo()); }catch(e){}
+  try{
+    if(navigator.canShare && navigator.canShare({files:arquivos})){ await navigator.share({files:arquivos}); toast("Escolha o WhatsApp. O resumo foi copiado."); return; }
+  }catch(e){ if(e && e.name==="AbortError") return; }
+  arquivos.forEach((f,i)=>setTimeout(()=>baixar(f,f.name),i*500));
+  toast(msgBaixado);
+}
+function baixar(blob,nome){
+  const url=URL.createObjectURL(blob), a=document.createElement("a");
+  a.href=url; a.download=nome; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),5000);
+}
+function faixa(x,texto,y,w,h){
+  texto=texto.toUpperCase();
+  x.fillStyle="#17202a"; x.fillRect(0,y,w,h);
+  x.fillStyle="#ffffff"; let fs=Math.round(h*0.5); x.font="bold "+fs+"px Arial";
+  while(x.measureText(texto).width>w-40 && fs>20){ fs-=2; x.font="bold "+fs+"px Arial"; }
+  x.fillText(texto,20,y+h/2+fs*0.35);
+}
+
+/* Enviar: cada foto inteira, em boa resolução, com o nome escrito embaixo */
+async function enviarSoltas(){
+  const itens=itensComFoto(); if(!itens.length){ toast("Nenhuma foto ainda. Toque nos quadros para adicionar.", true); return; }
+  const tag=carimbo(), arquivos=[];
+  for(const it of itens){
+    const im=await carregarImg(it.f); if(!im) continue;
+    const band=Math.round(im.width*0.09);
+    const c=document.createElement("canvas"); c.width=im.width; c.height=im.height+band;
+    const x=c.getContext("2d"); x.drawImage(im,0,0);
+    faixa(x,String(it.i+1).padStart(2,"0")+" - "+it.n,im.height,c.width,band);
+    const nome=NOMES[tipo]+" "+String(it.i+1).padStart(2,"0")+" - "+it.n.replace(/[\/\\:*?"<>|,()]/g,"")+" "+tag+".jpg";
+    arquivos.push(new File([await paraBlob(c)],nome,{type:"image/jpeg"}));
+  }
+  enviarOuBaixar(arquivos,"Fotos salvas em Downloads, cada uma com o nome. Resumo copiado.");
+};
+
+/* Painel: páginas com 3 fotos grandes cada, no formato da tela do celular */
+$("painel").onclick=async ()=>{
+  const itens=itensComFoto(); if(!itens.length){ toast("Nenhuma foto ainda. Toque nos quadros para adicionar.", true); return; }
+  const W=2160, PH=2000, CAP=180, TOP=(tipo==="mt"&&desm==="sim")?620:260, POR=3, tag=carimbo(), resp=$("f-resp").value.trim(), vz=$("f-viab").value.trim();
+  const paginas=Math.ceil(itens.length/POR), arquivos=[];
+  for(let p=0;p<paginas;p++){
+    const grupo=itens.slice(p*POR,p*POR+POR);
+    const topo=p===0?TOP:0;
+    const c=document.createElement("canvas"); c.width=W; c.height=topo+grupo.length*(PH+CAP)+200;
+    const x=c.getContext("2d"); x.fillStyle="#ffffff"; x.fillRect(0,0,W,c.height);
+    if(p===0){ x.fillStyle="#17202a"; x.font="bold 92px Arial"; x.fillText("VISITA TÉCNICA "+NOMES[tipo]+" · Técnico: Reinaldo",48,116,W-96);
+    x.fillStyle="#5b6876"; x.font="64px Arial";
+    x.fillText(new Date().toLocaleDateString("pt-BR")+(resp?" · "+resp:"")+(vz?" · Viabilizador: "+vz:""),48,216,W-96);
+    if(tipo==="mt"&&desm==="sim"){ x.fillStyle="#c8312b"; x.fillRect(0,250,W,340); x.fillStyle="#ffd400"; x.fillRect(0,250,W,18); x.fillRect(0,572,W,18); x.fillStyle="#ffffff"; x.textAlign="center"; x.font="bold 120px Arial"; x.fillText("⚠ ATENÇÃO ⚠",W/2,400,W-96); x.font="bold 110px Arial"; x.fillText("ELETROCENTRO DESMEMBRADO",W/2,530,W-96); x.textAlign="left"; } }
+    for(let k=0;k<grupo.length;k++){
+      const it=grupo[k], im=await carregarImg(it.f), y=topo+k*(PH+CAP);
+      x.fillStyle="#e9edf1"; x.fillRect(0,y,W,PH);
+      if(im){ const s=Math.min(W/im.width,PH/im.height), w=im.width*s, h=im.height*s; x.drawImage(im,(W-w)/2,y+(PH-h)/2,w,h); }
+      faixa(x,String(it.i+1).padStart(2,"0")+" - "+it.n,y+PH,W,CAP);
+    }
+    arquivos.push(new File([await paraBlob(c)],"Painel "+NOMES[tipo]+" "+(p+1)+" de "+paginas+" "+tag+".jpg",{type:"image/jpeg"}));
+  }
+  enviarOuBaixar(arquivos,"Painel salvo em Downloads ("+paginas+" imagens). Resumo copiado.");
+};
+$("reset").onclick=()=>{ $("confirm").hidden=false; $("reset").hidden=true; };
+$("no").onclick=()=>{ $("confirm").hidden=true; $("reset").hidden=false; };
+$("yes").onclick=()=>{
+  Object.keys(fotos).forEach(k=>salvar("foto:"+k,null)); fotos={};
+  CAMPOS.forEach(id=>{ $(id).value=""; salvar("campo:"+id,null); }); setViab(""); setDesm("");
+  $("confirm").hidden=true; $("reset").hidden=false; $("fallback").hidden=true; render(); toast("Pronto para nova visita.");
+};
+
+render();
+abrirDB().then(carregarTudo).then(render);
+try{ navigator.storage && navigator.storage.persist && navigator.storage.persist(); }catch(e){}
+if("serviceWorker" in navigator){ window.addEventListener("load",()=>{ navigator.serviceWorker.register("sw.js").catch(()=>{}); }); }
+</script>
+
+</body>
+</html>
