@@ -134,7 +134,9 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline
       <button type="button" class="vb sim" id="d-nao" aria-pressed="false">NÃO</button>
     </div>
     <label style="grid-column:1/-1">👤 Responsável local<input id="f-resp" type="text" placeholder="Nome do responsável"></label>
+    <label style="grid-column:1/-1">📞 Telefone do responsável<input id="f-resp-tel" type="tel" inputmode="numeric" placeholder="Ex.: 11 91234-5678"></label>
     <label style="grid-column:1/-1">🤝 Viabilizador<input id="f-viab" type="text" placeholder="Nome do viabilizador"></label>
+    <label style="grid-column:1/-1">📞 Telefone do viabilizador<input id="f-viab-tel" type="tel" inputmode="numeric" placeholder="Ex.: 11 91234-5678"></label>
     <div class="metr3" id="box-mat" style="grid-column:1/-1">
       <label>🔩 Parafusos p/ emenda<input id="f-paraf" type="text" inputmode="numeric" placeholder="Qtd."></label>
       <label>🔌 Cabos adicionais<input id="f-cabos" type="text" inputmode="numeric" placeholder="Qtd."></label>
@@ -168,12 +170,12 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline
 
 <script>
 const LISTAS = {
-  bt: ["Folha da viabilidade","Local do quadro","Dentro do quadro","Tensão entre fases","Tensão fase-neutro","Corrente fase R","Corrente fase S","Corrente fase T","Identificação das fases R, S, T e neutro","Local de instalação do gerador","Número do local","Carro em frente ao local","APR (print)"],
-  mt: ["Folha da viabilidade","Ponto de conexão do gerador","Aterramento","Local do gerador","Inclinômetro","Número do local","Carro em frente ao local","APR","Medida do local do eletrocentro (m)"],
-  em: ["Local do quadro","Dentro do quadro","Tensão entre fases","Tensão fase-neutro","Corrente fase R","Corrente fase S","Corrente fase T","Medição em cima da NH","Medição embaixo da NH","Identificação das fases R, S, T e neutro (se possível)","Local de instalação do gerador","Número do local","Carro em frente ao local","APR (print)"]
+  bt: ["Folha da viabilidade","Local do quadro","Dentro do quadro","Indicação REDE e CARGA no quadro","Tensão entre fases","Tensão fase-neutro","Corrente fase R","Corrente fase S","Corrente fase T","Identificação das fases R, S, T e neutro","Local de instalação do gerador","Número do local","Carro em frente ao local"],
+  mt: ["Folha da viabilidade","Ponto de conexão do gerador","Aterramento","Local do gerador","Inclinômetro","Número do local","Carro em frente ao local","Medida do local do eletrocentro (m)"],
+  em: ["Local do quadro","Dentro do quadro","Indicação REDE e CARGA no quadro","Tensão entre fases","Tensão fase-neutro","Corrente fase R","Corrente fase S","Corrente fase T","Medição em cima da NH","Medição embaixo da NH","Identificação das fases R, S, T e neutro (se possível)","Local de instalação do gerador","Número do local","Carro em frente ao local"]
 };
 const NOMES = {bt:"B.T", mt:"M.T", em:"B.T EMERGENCIAL"};
-const CAMPOS = ["f-end","f-entr","f-princ","f-resp","f-viab","f-obs","f-paraf","f-cabos","f-passa"];
+const CAMPOS = ["f-end","f-entr","f-princ","f-resp","f-resp-tel","f-viab","f-viab-tel","f-obs","f-paraf","f-cabos","f-passa"];
 let tipo = "bt";
 let fotos = {};        // chave "bt-0" -> dataURL
 let alvo = null;
@@ -328,6 +330,17 @@ $("d-sim").onclick=()=>setDesm(desm==="sim"?"":"sim");
 $("d-nao").onclick=()=>setDesm(desm==="nao"?"":"nao");
 function atualizarPreview(){ $("preview").textContent=resumo(); }
 
+const TEC_TEL="11918903125";
+/* Telefone: (11) 91234-5678 e, embaixo, só números para digitar no app */
+function fone(v){
+  let d=String(v||"").replace(/\D/g,"");
+  if(d.startsWith("55") && d.length>11) d=d.slice(2);
+  if(!d) return "";
+  let f=d;
+  if(d.length===11) f="("+d.slice(0,2)+") "+d.slice(2,7)+"-"+d.slice(7);
+  else if(d.length===10) f="("+d.slice(0,2)+") "+d.slice(2,6)+"-"+d.slice(6);
+  return "📞 "+f+"\n🔢 "+d+"\n";
+}
 function resumo(){
   const end=$("f-end").value.trim(), resp=$("f-resp").value.trim(), vz=$("f-viab").value.trim(), obs=$("f-obs").value.trim();
   let t="⚡ VISITA TÉCNICA "+NOMES[tipo]+" ⚡\n━━━━━━━━━━━━\n";
@@ -339,7 +352,9 @@ function resumo(){
   if(entr) t+="🚪 Entrada: "+entr+(princ?" (paralela à "+princ+")":"")+"\n";
   if(tipo==="mt" && desm==="nao") t+="🔌 Eletrocentro: não desmembrado\n";
   if(resp) t+="👤 Responsável local: "+resp+"\n";
+  t+=fone($("f-resp-tel").value);
   if(vz) t+="🤝 Viabilizador: "+vz+"\n";
+  t+=fone($("f-viab-tel").value);
   if(tipo==="bt"||tipo==="em"){
     const pa=$("f-paraf").value.trim(), ca=$("f-cabos").value.trim(), ps=$("f-passa").value.trim();
     if(pa) t+="🔩 Parafusos p/ emenda: "+pa+"\n";
@@ -347,7 +362,7 @@ function resumo(){
     if(ps) t+="🧱 Passa-cabos: "+ps+"\n";
   }
   if(obs) t+="ℹ️ "+obs+"\n";
-  t+="\n👷 Técnico: Reinaldo\n";
+  t+="\n👷 Técnico: Reinaldo\n"+fone(TEC_TEL);
   if(viab==="sim") t+="✅ VIABILIDADE: SIM";
   else if(viab==="nao") t+="❌ VIABILIDADE: NÃO";
   if(AL) t+="\n\n🚨 *ATENÇÃO: ELETROCENTRO DESMEMBRADO* 🚨";
