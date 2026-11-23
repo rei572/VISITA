@@ -126,7 +126,6 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline
       <button type="button" class="btn" id="ler-end">🔎 Ler endereço da folha da viabilidade</button>
       <span id="ocr-status" aria-live="polite"></span>
     </div>
-    <label style="grid-column:1/-1">🚪 Rua de entrada<input id="f-entr" type="text" placeholder="Ex.: R. Augusto Tolle, 120 (portão lateral)"></label>
     <label style="grid-column:1/-1">↔️ Paralela à rua principal<input id="f-princ" type="text" placeholder="Ex.: Estrada do Campo Limpo"></label>
     <div class="viab" id="box-desm" role="group" aria-label="Eletrocentro desmembrado" style="grid-column:1/-1" hidden>
       <span>⚠️ Eletrocentro desmembrado?</span>
@@ -176,7 +175,7 @@ const LISTAS = {
   em: ["Local do quadro","Dentro do quadro","Indicação REDE e CARGA no quadro","Tensão entre fases","Tensão fase-neutro","Corrente fase R","Corrente fase S","Corrente fase T","Medição em cima da NH","Medição embaixo da NH","Identificação das fases R, S, T e neutro (se possível)","Local de instalação do gerador","Número do local","Carro em frente ao local"]
 };
 const NOMES = {bt:"B.T", mt:"M.T", em:"B.T EMERGENCIAL"};
-const CAMPOS = ["f-end","f-entr","f-princ","f-resp","f-resp-tel","f-viab","f-viab-tel","f-obs","f-metr","f-paraf","f-cabos","f-passa"];
+const CAMPOS = ["f-end","f-princ","f-resp","f-resp-tel","f-viab","f-viab-tel","f-obs","f-metr","f-paraf","f-cabos","f-passa"];
 let tipo = "bt";
 let fotos = {};        // chave "bt-0" -> dataURL
 let alvo = null;
@@ -349,9 +348,8 @@ function resumo(){
   const AL=(tipo==="mt" && desm==="sim");
   if(AL) t="🚨🚨🚨🚨🚨🚨🚨🚨\n*⚠️ ATENÇÃO ⚠️*\n*ELETROCENTRO DESMEMBRADO*\n🚨🚨🚨🚨🚨🚨🚨🚨\n\n"+t;
   if(end) t+="📍 Endereço: "+end+"\n";
-  const entr=$("f-entr").value.trim();
   const princ=$("f-princ").value.trim();
-  if(entr) t+="🚪 Entrada: "+entr+(princ?" (paralela à "+princ+")":"")+"\n";
+  if(princ) t+="↔️ Paralela à rua principal: "+princ+"\n";
   if(tipo==="mt" && desm==="nao") t+="🔌 Eletrocentro: não desmembrado\n";
   if(resp) t+="👤 Responsável local: "+resp+"\n";
   t+=fone($("f-resp-tel").value);
