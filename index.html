@@ -351,7 +351,7 @@ function fone(v){
   let f=d;
   if(d.length===11) f="("+d.slice(0,2)+") "+d.slice(2,7)+"-"+d.slice(7);
   else if(d.length===10) f="("+d.slice(0,2)+") "+d.slice(2,6)+"-"+d.slice(6);
-  return "📞 "+f+"\n🔢 "+d+"\n";
+  return "📞 "+f+"\n";
 }
 function resumo(){
   const end=$("f-end").value.trim(), resp=$("f-resp").value.trim(), vz=$("f-viab").value.trim(), obs=$("f-obs").value.trim();
