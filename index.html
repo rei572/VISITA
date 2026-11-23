@@ -150,7 +150,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline
   <pre class="preview" id="preview"></pre>
 
   <div class="actions">
-    <button class="btn primary" id="painel">Gerar painel com as fotos</button>
+    <button class="btn primary" id="fotos">📷 Enviar fotos em HD no WhatsApp</button>
     <button class="btn" id="copy">Enviar relatório no WhatsApp</button>
     <div class="toast" id="toast" aria-live="polite"></div>
     <textarea id="fallback" hidden readonly style="width:100%;min-height:160px;font:inherit;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg)"></textarea>
@@ -380,7 +380,7 @@ function paraBlob(c){ return new Promise(r=>c.toBlob(r,"image/jpeg",.95)); }
 async function enviarOuBaixar(arquivos,msgBaixado){
   try{ await navigator.clipboard.writeText(resumo()); }catch(e){}
   try{
-    if(navigator.canShare && navigator.canShare({files:arquivos})){ await navigator.share({files:arquivos}); toast("Escolha o WhatsApp. O resumo foi copiado."); return; }
+    if(navigator.canShare && navigator.canShare({files:arquivos})){ await navigator.share({files:arquivos}); toast("Escolha o WhatsApp e toque em HD antes de enviar. O resumo foi copiado."); return; }
   }catch(e){ if(e && e.name==="AbortError") return; }
   arquivos.forEach((f,i)=>setTimeout(()=>baixar(f,f.name),i*500));
   toast(msgBaixado);
@@ -398,24 +398,16 @@ function faixa(x,texto,y,w,h){
   x.fillText(texto,20,y+h/2+fs*0.35);
 }
 
-/* Enviar: cada foto inteira, em boa resolução, com o nome escrito embaixo */
+/* Enviar: só as fotos, inteiras e em HD, sem nome/legenda */
 async function enviarSoltas(){
   const itens=itensComFoto(); if(!itens.length){ toast("Nenhuma foto ainda. Toque nos quadros para adicionar.", true); return; }
-  const tag=carimbo(), arquivos=[];
-  for(const it of itens){
-    const im=await carregarImg(it.f); if(!im) continue;
-    const band=Math.round(im.width*0.09);
-    const c=document.createElement("canvas"); c.width=im.width; c.height=im.height+band;
-    const x=c.getContext("2d"); x.drawImage(im,0,0);
-    faixa(x,String(it.i+1).padStart(2,"0")+" - "+it.n,im.height,c.width,band);
-    const nome=NOMES[tipo]+" "+String(it.i+1).padStart(2,"0")+" - "+it.n.replace(/[\/\\:*?"<>|,()]/g,"")+" "+tag+".jpg";
-    arquivos.push(new File([await paraBlob(c)],nome,{type:"image/jpeg"}));
-  }
-  enviarOuBaixar(arquivos,"Fotos salvas em Downloads, cada uma com o nome. Resumo copiado.");
+  const arquivos=itens.map((it,j)=>paraArquivo(it.f,"IMG_"+Date.now()+"_"+j+".jpg"));
+  enviarOuBaixar(arquivos,"Fotos salvas em Downloads. Resumo copiado.");
 };
+$("fotos").onclick=enviarSoltas;
 
 /* Painel: páginas com 3 fotos grandes cada, no formato da tela do celular */
-$("painel").onclick=async ()=>{
+const painelAntigo=async ()=>{
   const itens=itensComFoto(); if(!itens.length){ toast("Nenhuma foto ainda. Toque nos quadros para adicionar.", true); return; }
   const W=2160, PH=2000, CAP=180, TOP=(tipo==="mt"&&desm==="sim")?620:260, POR=3, tag=carimbo(), resp=$("f-resp").value.trim(), vz=$("f-viab").value.trim();
   const paginas=Math.ceil(itens.length/POR), arquivos=[];
