@@ -1,4 +1,4 @@
-const VERSAO = "visita-v7";
+const VERSAO = "visita-v8";
 const APP = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(VERSAO).then(c => c.addAll(APP)).then(() => self.skipWaiting()));
@@ -12,7 +12,7 @@ self.addEventListener("fetch", e => {
   const url = new URL(req.url);
   if (url.origin === location.origin) {
     // app: tenta a internet (pega atualização), sem sinal usa o que está guardado
-    e.respondWith(fetch(req).then(r => { const c = r.clone(); caches.open(VERSAO).then(ca => ca.put(req, c)); return r; })
+    e.respondWith(fetch(req, {cache: "no-store"}).then(r => { const c = r.clone(); caches.open(VERSAO).then(ca => ca.put(req, c)); return r; })
       .catch(() => caches.match(req).then(r => r || caches.match("index.html"))));
   } else {
     // fontes e leitor de endereço: guarda na primeira vez e usa sem internet depois
