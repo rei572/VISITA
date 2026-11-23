@@ -151,6 +151,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline
 
   <div class="actions">
     <button class="btn primary" id="fotos">📷 Enviar fotos em HD no WhatsApp</button>
+    <div id="partes" class="actions" hidden></div>
     <button class="btn" id="copy">Enviar relatório no WhatsApp</button>
     <div class="toast" id="toast" aria-live="polite"></div>
     <textarea id="fallback" hidden readonly style="width:100%;min-height:160px;font:inherit;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg)"></textarea>
@@ -398,11 +399,32 @@ function faixa(x,texto,y,w,h){
   x.fillText(texto,20,y+h/2+fs*0.35);
 }
 
-/* Enviar: só as fotos, inteiras e em HD, sem nome/legenda */
+/* Enviar: só as fotos, inteiras e em HD, sem nome/legenda. Nunca baixa. */
+let partes=[];
+async function compartilhar(arquivos){
+  if(!navigator.share){ toast("Este navegador não compartilha fotos. Abra pelo Chrome.", true); return false; }
+  try{ await navigator.share({files:arquivos}); }
+  catch(e){ if(e && e.name==="AbortError") return true; return false; }
+  try{ await navigator.clipboard.writeText(resumo()); }catch(e){}
+  toast("Escolha o WhatsApp e toque em HD antes de enviar. Resumo copiado.");
+  return true;
+}
+function mostrarPartes(){
+  const box=$("partes"); box.innerHTML=""; box.hidden=false;
+  const p=document.createElement("p"); p.className="note"; p.textContent="Muitas fotos de uma vez. Envie em partes:"; box.appendChild(p);
+  partes.forEach((g,i)=>{ const b=document.createElement("button"); b.className="btn"; b.type="button";
+    b.textContent="📷 Enviar parte "+(i+1)+" de "+partes.length+" ("+g.length+" fotos)";
+    b.onclick=async ()=>{ if(await compartilhar(g)) b.textContent="✅ Parte "+(i+1)+" enviada"; else toast("Não deu para abrir o WhatsApp. Tente de novo.", true); };
+    box.appendChild(b); });
+}
 async function enviarSoltas(){
+  $("partes").hidden=true;
   const itens=itensComFoto(); if(!itens.length){ toast("Nenhuma foto ainda. Toque nos quadros para adicionar.", true); return; }
   const arquivos=itens.map((it,j)=>paraArquivo(it.f,"IMG_"+Date.now()+"_"+j+".jpg"));
-  enviarOuBaixar(arquivos,"Fotos salvas em Downloads. Resumo copiado.");
+  const cabe = !navigator.canShare || navigator.canShare({files:arquivos});
+  if(cabe && await compartilhar(arquivos)) return;
+  partes=[]; for(let i=0;i<arquivos.length;i+=5) partes.push(arquivos.slice(i,i+5));
+  mostrarPartes();
 };
 $("fotos").onclick=enviarSoltas;
 
