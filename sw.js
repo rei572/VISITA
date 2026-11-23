@@ -1,4 +1,4 @@
-const VERSAO = "visita-v6";
+const VERSAO = "visita-v7";
 const APP = ["./", "index.html", "manifest.webmanifest", "icon-192.png", "icon-512.png"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(VERSAO).then(c => c.addAll(APP)).then(() => self.skipWaiting()));

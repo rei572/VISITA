@@ -133,9 +133,9 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline
       <button type="button" class="vb sim" id="d-nao" aria-pressed="false">NÃO</button>
     </div>
     <label style="grid-column:1/-1">👤 Responsável local<input id="f-resp" type="text" placeholder="Nome do responsável"></label>
-    <label style="grid-column:1/-1">📞 Telefone do responsável<input id="f-resp-tel" type="tel" inputmode="numeric" placeholder="Ex.: 11 91234-5678"></label>
+    <label style="grid-column:1/-1">📞 Telefone do responsável<input id="f-resp-tel" type="tel" inputmode="numeric" placeholder="(11) 91234-5678"></label>
     <label style="grid-column:1/-1">🤝 Viabilizador<input id="f-viab" type="text" placeholder="Nome do viabilizador"></label>
-    <label style="grid-column:1/-1">📞 Telefone do viabilizador<input id="f-viab-tel" type="tel" inputmode="numeric" placeholder="Ex.: 11 91234-5678"></label>
+    <label style="grid-column:1/-1">📞 Telefone do viabilizador<input id="f-viab-tel" type="tel" inputmode="numeric" placeholder="(11) 91234-5678"></label>
     <label style="grid-column:1/-1" id="box-metr">📏 Metragem de cabos até o quadro (m)<input id="f-metr" type="text" inputmode="decimal" placeholder="Ex.: 35"></label>
     <div class="metr3" id="box-mat" style="grid-column:1/-1">
       <label>🔩 Parafusos p/ emenda<input id="f-paraf" type="text" inputmode="numeric" placeholder="Qtd."></label>
@@ -320,6 +320,17 @@ $("ler-end").onclick=()=>{ const i=(LISTAS[tipo]||[]).indexOf("Folha da viabilid
   if(i<0){ ocrStatus("Esta visita não tem folha da viabilidade.","err"); return; }
   lerEndereco(fotos[tipo+"-"+i]); };
 document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{ tipo=b.dataset.tipo; salvar("tipo",tipo); render(); });
+/* Máscara de telefone enquanto digita: (11) 91234-5678 */
+function mascaraTel(v){
+  let d=String(v||"").replace(/\D/g,"").slice(0,11);
+  if(!d) return "";
+  if(d.length<=2) return "("+d;
+  if(d.length<=6) return "("+d.slice(0,2)+") "+d.slice(2);
+  if(d.length<=10) return "("+d.slice(0,2)+") "+d.slice(2,6)+"-"+d.slice(6);
+  return "("+d.slice(0,2)+") "+d.slice(2,7)+"-"+d.slice(7);
+}
+["f-resp-tel","f-viab-tel"].forEach(id=>{ const el=$(id); el.maxLength=15;
+  el.addEventListener("input",()=>{ el.value=mascaraTel(el.value); }); });
 CAMPOS.forEach(id=>$(id).addEventListener("input",e=>{ salvar("campo:"+id,e.target.value); atualizarPreview(); }));
 let viab="";
 function setViab(v){ viab=v; $("v-sim").setAttribute("aria-pressed",v==="sim"); $("v-nao").setAttribute("aria-pressed",v==="nao"); salvar("viab",v); atualizarPreview(); }
