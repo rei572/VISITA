@@ -137,6 +137,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline
     <label style="grid-column:1/-1">📞 Telefone do responsável<input id="f-resp-tel" type="tel" inputmode="numeric" placeholder="Ex.: 11 91234-5678"></label>
     <label style="grid-column:1/-1">🤝 Viabilizador<input id="f-viab" type="text" placeholder="Nome do viabilizador"></label>
     <label style="grid-column:1/-1">📞 Telefone do viabilizador<input id="f-viab-tel" type="tel" inputmode="numeric" placeholder="Ex.: 11 91234-5678"></label>
+    <label style="grid-column:1/-1" id="box-metr">📏 Metragem de cabos até o quadro (m)<input id="f-metr" type="text" inputmode="decimal" placeholder="Ex.: 35"></label>
     <div class="metr3" id="box-mat" style="grid-column:1/-1">
       <label>🔩 Parafusos p/ emenda<input id="f-paraf" type="text" inputmode="numeric" placeholder="Qtd."></label>
       <label>🔌 Cabos adicionais<input id="f-cabos" type="text" inputmode="numeric" placeholder="Qtd."></label>
@@ -175,7 +176,7 @@ const LISTAS = {
   em: ["Local do quadro","Dentro do quadro","Indicação REDE e CARGA no quadro","Tensão entre fases","Tensão fase-neutro","Corrente fase R","Corrente fase S","Corrente fase T","Medição em cima da NH","Medição embaixo da NH","Identificação das fases R, S, T e neutro (se possível)","Local de instalação do gerador","Número do local","Carro em frente ao local"]
 };
 const NOMES = {bt:"B.T", mt:"M.T", em:"B.T EMERGENCIAL"};
-const CAMPOS = ["f-end","f-entr","f-princ","f-resp","f-resp-tel","f-viab","f-viab-tel","f-obs","f-paraf","f-cabos","f-passa"];
+const CAMPOS = ["f-end","f-entr","f-princ","f-resp","f-resp-tel","f-viab","f-viab-tel","f-obs","f-metr","f-paraf","f-cabos","f-passa"];
 let tipo = "bt";
 let fotos = {};        // chave "bt-0" -> dataURL
 let alvo = null;
@@ -228,6 +229,7 @@ function render(){
   $("tab-em").setAttribute("aria-pressed", tipo==="em");
   $("box-desm").hidden = tipo!=="mt";
   $("box-mat").hidden = !(tipo==="bt"||tipo==="em");
+  $("box-metr").hidden = !(tipo==="bt"||tipo==="em");
   $("d-sim").setAttribute("aria-pressed",desm==="sim"); $("d-nao").setAttribute("aria-pressed",desm==="nao");
   const lista = LISTAS[tipo], grid=$("grid"); grid.innerHTML="";
   let feitas=0;
@@ -357,6 +359,8 @@ function resumo(){
   t+=fone($("f-viab-tel").value);
   if(tipo==="bt"||tipo==="em"){
     const pa=$("f-paraf").value.trim(), ca=$("f-cabos").value.trim(), ps=$("f-passa").value.trim();
+    const me=$("f-metr").value.trim().replace(/\s*m$/i,"");
+    if(me) t+="📏 Metragem de cabos até o quadro: "+me+" m\n";
     if(pa) t+="🔩 Parafusos p/ emenda: "+pa+"\n";
     if(ca) t+="🔌 Cabos adicionais: "+ca+"\n";
     if(ps) t+="🧱 Passa-cabos: "+ps+"\n";
