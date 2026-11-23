@@ -47,7 +47,7 @@ header p{margin:4px 0 0;color:var(--muted);font-size:.95rem}
 .bar i{display:block;height:100%;background:currentColor;transition:width .25s}
 .fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .fields label{display:flex;flex-direction:column;gap:4px;font-size:.8rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;min-width:0}
-.fields input,.fields textarea{font:inherit;font-size:1rem;text-transform:none;letter-spacing:0;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px;width:100%}
+.fields input,.fields textarea,.fields select{font:inherit;font-size:1rem;text-transform:none;letter-spacing:0;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px;width:100%}
 .sec{font-family:var(--display);font-weight:700;font-size:1.4rem;letter-spacing:.03em;text-transform:uppercase;margin:6px 0 0}
 .fields textarea{font:inherit;font-size:1rem;text-transform:none;letter-spacing:0;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px;width:100%;resize:vertical}
 .metr{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -121,6 +121,7 @@ button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline
 
   <h2 class="sec">Relatório da visita</h2>
   <div class="fields">
+    <label style="grid-column:1/-1">🔋 Gerador (kVA)<select id="f-kva"><option value="">Selecione…</option><option value="20">20 kVA</option><option value="25">25 kVA</option><option value="30">30 kVA</option><option value="40">40 kVA</option><option value="45">45 kVA</option><option value="50">50 kVA</option><option value="55">55 kVA</option><option value="60">60 kVA</option><option value="65">65 kVA</option><option value="75">75 kVA</option><option value="80">80 kVA</option><option value="85">85 kVA</option><option value="90">90 kVA</option><option value="100">100 kVA</option><option value="105">105 kVA</option><option value="115">115 kVA</option><option value="125">125 kVA</option><option value="140">140 kVA</option><option value="150">150 kVA</option><option value="165">165 kVA</option><option value="180">180 kVA</option><option value="200">200 kVA</option><option value="230">230 kVA</option><option value="250">250 kVA</option><option value="260">260 kVA</option><option value="275">275 kVA</option><option value="300">300 kVA</option><option value="330">330 kVA</option><option value="350">350 kVA</option><option value="375">375 kVA</option><option value="400">400 kVA</option><option value="415">415 kVA</option><option value="450">450 kVA</option><option value="500">500 kVA</option><option value="550">550 kVA</option><option value="600">600 kVA</option><option value="650">650 kVA</option><option value="700">700 kVA</option><option value="750">750 kVA</option><option value="800">800 kVA</option><option value="850">850 kVA</option><option value="900">900 kVA</option><option value="940">940 kVA</option></select></label>
     <label style="grid-column:1/-1">📍 Endereço<input id="f-end" type="text" placeholder="Ex.: R. Jerônimo Dias Ribeiro, 308 – Jardim São Paulo"></label>
     <div class="ocr" style="grid-column:1/-1">
       <button type="button" class="btn" id="ler-end">🔎 Ler endereço da folha da viabilidade</button>
@@ -175,7 +176,7 @@ const LISTAS = {
   em: ["Local do quadro","Dentro do quadro","Indicação REDE e CARGA no quadro","Tensão entre fases","Tensão fase-neutro","Corrente fase R","Corrente fase S","Corrente fase T","Medição em cima da NH","Medição embaixo da NH","Identificação das fases R, S, T e neutro (se possível)","Local de instalação do gerador","Número do local","Carro em frente ao local"]
 };
 const NOMES = {bt:"B.T", mt:"M.T", em:"B.T EMERGENCIAL"};
-const CAMPOS = ["f-end","f-princ","f-resp","f-resp-tel","f-viab","f-viab-tel","f-obs","f-metr","f-paraf","f-cabos","f-passa"];
+const CAMPOS = ["f-kva","f-end","f-princ","f-resp","f-resp-tel","f-viab","f-viab-tel","f-obs","f-metr","f-paraf","f-cabos","f-passa"];
 let tipo = "bt";
 let fotos = {};        // chave "bt-0" -> dataURL
 let alvo = null;
@@ -358,6 +359,7 @@ function resumo(){
   let t="⚡ VISITA TÉCNICA "+NOMES[tipo]+" ⚡\n━━━━━━━━━━━━\n";
   const AL=(tipo==="mt" && desm==="sim");
   if(AL) t="🚨🚨🚨🚨🚨🚨🚨🚨\n*⚠️ ATENÇÃO ⚠️*\n*ELETROCENTRO DESMEMBRADO*\n🚨🚨🚨🚨🚨🚨🚨🚨\n\n"+t;
+  const kva=$("f-kva").value; if(kva) t+="🔋 Gerador: "+kva+" kVA\n";
   if(end) t+="📍 Endereço: "+end+"\n";
   const princ=$("f-princ").value.trim();
   if(princ) t+="↔️ Paralela à rua principal: "+princ+"\n";
